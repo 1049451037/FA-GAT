@@ -40,37 +40,32 @@ def sp_attn_head(seq, out_sz, adj_mat, activation, nb_nodes, in_drop=0.0, coef_d
         if in_drop != 0.0:
             seq = tf.nn.dropout(seq, 1.0 - in_drop)
 
-        seq_fts = tf.layers.conv1d(seq, out_sz, 1, use_bias=False)
+        initializer = tf.contrib.layers.xavier_initializer()
+        seq_fts = tf.layers.conv1d(seq, out_sz, 1, use_bias=False, kernel_initializer=initializer)
 
         # simplest self-attention possible
-        f_1 = tf.layers.conv1d(seq_fts, 1, 1)
-        f_2 = tf.layers.conv1d(seq_fts, 1, 1)
+        f_1 = tf.layers.conv1d(seq_fts, 1, 1, use_bias=False, kernel_initializer=initializer)
+        f_2 = tf.layers.conv1d(seq_fts, 1, 1, use_bias=False, kernel_initializer=initializer)
         
         f_1 = tf.reshape(f_1, (nb_nodes, 1))
         f_2 = tf.reshape(f_2, (nb_nodes, 1))
 
-        f_1 = adj_mat*f_1
-        f_2 = adj_mat * tf.transpose(f_2, [1,0])
-
-        logits = tf.sparse_add(f_1, f_2)
-        lrelu = tf.SparseTensor(indices=logits.indices, 
-                values=tf.nn.leaky_relu(logits.values), 
-                dense_shape=logits.dense_shape)
-        coefs = tf.sparse_softmax(lrelu)
-
-        if coef_drop != 0.0:
-            coefs = tf.SparseTensor(indices=coefs.indices,
-                    values=tf.nn.dropout(coefs.values, 1.0 - coef_drop),
-                    dense_shape=coefs.dense_shape)
+        alpha = 0.3
+        seq_fts = tf.squeeze(seq_fts)
+        f_1 = tf.keras.activations.elu(tf.matmul(seq_fts, f_1), alpha=alpha)+1
+        f_2 = tf.keras.activations.elu(tf.matmul(seq_fts, w2), alpha=alpha)
+        
         if in_drop != 0.0:
             seq_fts = tf.nn.dropout(seq_fts, 1.0 - in_drop)
-
         # As tf.sparse_tensor_dense_matmul expects its arguments to have rank-2,
         # here we make an assumption that our input is of batch size 1, and reshape appropriately.
         # The method will fail in all other cases!
-        coefs = tf.sparse_reshape(coefs, [nb_nodes, nb_nodes])
-        seq_fts = tf.squeeze(seq_fts)
-        vals = tf.sparse_tensor_dense_matmul(coefs, seq_fts)
+        N = tf.sparse.reduce_sum(adj_mat, axis=1, keepdims=True)
+        fz = f_1*tf.sparse_tensor_dense_matmul(adj_mat, seq_fts) + tf.sparse_tensor_dense_matmul(adj_mat, f_2*seq_fts)
+        fm = f_1*N + tf.sparse_tensor_dense_matmul(adj_mat, f_2)
+        
+
+        vals = fz / fm
         vals = tf.expand_dims(vals, axis=0)
         vals.set_shape([1, nb_nodes, out_sz])
         ret = tf.contrib.layers.bias_add(vals)
