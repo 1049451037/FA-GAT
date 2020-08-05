@@ -52,8 +52,8 @@ def sp_attn_head(seq, out_sz, adj_mat, activation, nb_nodes, in_drop=0.0, coef_d
 
         alpha = 0.3
         seq_fts = tf.squeeze(seq_fts)
-        f_1 = tf.keras.activations.elu(tf.matmul(seq_fts, f_1), alpha=alpha)+1
-        f_2 = tf.keras.activations.elu(tf.matmul(seq_fts, w2), alpha=alpha)
+        f_1 = tf.keras.activations.elu(f_1, alpha=alpha)+1
+        f_2 = tf.keras.activations.elu(f_2, alpha=alpha)
         
         if in_drop != 0.0:
             seq_fts = tf.nn.dropout(seq_fts, 1.0 - in_drop)
