@@ -42,6 +42,8 @@ def sp_attn_head(seq, out_sz, adj_mat, activation, nb_nodes, in_drop=0.0, coef_d
 
         initializer = tf.contrib.layers.xavier_initializer()
         seq_fts = tf.layers.conv1d(seq, out_sz, 1, use_bias=False, kernel_initializer=initializer)
+        if in_drop != 0.0:
+            seq_fts = tf.nn.dropout(seq_fts, 1.0 - in_drop)
 
         # simplest self-attention possible
         f_1 = tf.layers.conv1d(seq_fts, 1, 1, use_bias=False, kernel_initializer=initializer)
@@ -55,8 +57,6 @@ def sp_attn_head(seq, out_sz, adj_mat, activation, nb_nodes, in_drop=0.0, coef_d
         f_1 = tf.keras.activations.elu(f_1, alpha=alpha)+1
         f_2 = tf.keras.activations.elu(f_2, alpha=alpha)
         
-        if in_drop != 0.0:
-            seq_fts = tf.nn.dropout(seq_fts, 1.0 - in_drop)
         # As tf.sparse_tensor_dense_matmul expects its arguments to have rank-2,
         # here we make an assumption that our input is of batch size 1, and reshape appropriately.
         # The method will fail in all other cases!
