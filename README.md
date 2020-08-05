@@ -1,5 +1,14 @@
+# FA-GAT
+First-order Approximation of Graph Attention Networks.
+
+This work is motivated by recent linear Transformer, you can see [draft](./draft.pdf) for details. However, my present body health can't support me to complete this work. If there is anyone who wants to make it a publication, welcome contact me. Otherwise, I just leave this repo to community.
+
+May the world be shining with kindness and goodness.
+
+
 # GAT
-Graph Attention Networks (Veličković *et al.*, ICLR 2018): [https://arxiv.org/abs/1710.10903](https://arxiv.org/abs/1710.10903)
+
+**content from https://github.com/PetarV-/GAT**
 
 GAT layer            |  t-SNE + Attention coefficients on Cora
 :-------------------------:|:-------------------------:
