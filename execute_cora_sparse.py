@@ -123,7 +123,7 @@ with tf.Graph().as_default():
                         lbl_in: y_train[tr_step*batch_size:(tr_step+1)*batch_size],
                         msk_in: train_mask[tr_step*batch_size:(tr_step+1)*batch_size],
                         is_train: True,
-                        attn_drop: 0.6, ffd_drop: 0.6})
+                        attn_drop: 0.6, ffd_drop: 0.8})
                 train_loss_avg += loss_value_tr
                 train_acc_avg += acc_tr
                 tr_step += 1
